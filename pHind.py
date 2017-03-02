@@ -3,6 +3,7 @@ import sys
 from sys import argv
 import requests
 import os
+from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
 
 prompt_mode = False
@@ -14,27 +15,28 @@ else:
 
 def user_locs(user):
     return '/v2/users/' + user + '/locations'
-if 'PHIND_U' not in os.environ or 'PHIND_S' not in os.environ:
-    print('env vars not correct')
-    sys.exit()
+
+def check_vars():
+    var_l = ['PHIND_U', 'PHIND_S']
+    for v in var_l:
+        if v not in os.environ:
+            print('env vars not correct')
+            sys.exit()
+
+check_vars()
 client_id = os.environ['PHIND_U']
 client_secret = os.environ['PHIND_S']
-redirect_uri = 'https://github.com/bamill/pHind'
-oauth = OAuth2Session(client_id, redirect_uri=redirect_uri)
+client = BackendApplicationClient(client_id=client_id)
+oauth = OAuth2Session(client=client)
+
 base_url = 'https://api.intra.42.fr'
-authorization_url, state = oauth.authorization_url(
-    'https://api.intra.42.fr/oauth/authorize?client_id=881c28693b370f4c24a5bb22a88824b7a1081fe8e90ad1e149a6b59e6cfc003f&redirect_uri=https%3A%2F%2Fgithub.com%2Fbamill%2FpHind&response_type=code')
-
-print('Please go to {} and authorize access.'.format(authorization_url))
-
-authorization_response = input('Enter the full callback URL: ')
 
 token = oauth.fetch_token(
     'https://api.intra.42.fr/oauth/token',
-    authorization_response=authorization_response,
+    client_id=client_id,
     client_secret=client_secret)
 
-if prompt_mode is True:
+def prompt():
     r = oauth.get(base_url + user_locs(input('user to find: ')), params={'filter[active]': 'true'})
     assert r.status_code is 200, 'Unexpected status {}'.format(r.status_code)
     ret = r.json()
@@ -42,6 +44,14 @@ if prompt_mode is True:
         print(ret[0]['host'])
     else:
         print('Unavailable')
+
+if prompt_mode is True:
+    prompt()
+    while True:
+        response = input("Find another user? Y/N \n")
+        if response not in ['Y', 'y', 'Yes', 'yes']:
+            break
+        prompt()
 else:
     for line in lines:
         r = oauth.get(base_url + user_locs(line))
