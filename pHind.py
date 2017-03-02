@@ -3,6 +3,7 @@ import sys
 from sys import argv
 import requests
 import os
+import re
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
 
@@ -41,9 +42,11 @@ def prompt():
     assert r.status_code is 200, 'Unexpected status {}'.format(r.status_code)
     ret = r.json()
     if ret != []:
-        print(ret[0]['host'])
+        s = re.split('([a-z][0-9]{1,3})', ret[0]['host'])
+        print('\x1b[32;1m' + s[1] + '\x1b[33;1m' + s[3] + '\x1b[34;1m' +
+              s[5] + '\x1b[35;1m' + s[7] + '\x1b[0m')
     else:
-        print('Unavailable')
+        print('\x1b[31;1m' + 'Unavailable' + '\x1b[0m')
 
 if prompt_mode is True:
     prompt()
@@ -58,6 +61,8 @@ else:
         assert r.status_code is 200, 'Unexpected status {}'.format(r.status_code)
         ret = r.json()
         if ret != []:
-            print(ret[0]['host'])
+            s = re.split('([a-z][0-9]{1,3})', ret[0]['host'])
+            print('\x1b[32;1m' + s[1] + '\x1b[33;1m' + s[3] + '\x1b[34;1m' +
+                  s[5] + '\x1b[35;1m' + s[7] + '\x1b[0m')
         else:
-            print('Unavailable')
+            print('\x1b[31;1m' + 'Unavailable' + '\x1b[0m')
