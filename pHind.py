@@ -18,7 +18,7 @@ def check_vars():
             print('env vars not correct')
             sys.exit()
 
-def user_lookup(user):
+def user_lookup(user, oauth, base_url, client, token):
     r = oauth.get(base_url + user_locs(user), params={'filter[active]': 'true'})
     if r.status_code == 404:
         print('\x1b[31;1m' + 'User ' + user + ' Not found' + '\x1b[0m')
@@ -36,9 +36,9 @@ def user_lookup(user):
             else:
                 print('\x1b[31;1m' + 'Unavailable' + '\x1b[0m')
 
-def prompt():
+def prompt(oauth, base_url, client, token):
     user = input('user to find: ')
-    user_lookup(user)
+    user_lookup(user, oauth, base_url, client, token)
 
 def main():
     prompt_mode = False
@@ -62,14 +62,14 @@ def main():
         client_secret=client_secret)
 
     if prompt_mode is True:
-        prompt()
+        prompt(oauth, base_url, client, token)
         while True:
             response = input("Find another user? Y/N \n")
             if response not in ['Y', 'y', 'Yes', 'yes']:
                 break
-            prompt()
+            prompt(oauth, base_url, client, token)
     else:
         for line in lines:
-            user_lookup(line)
+            user_lookup(line, oauth, base_url, client, token)
 
 main()
